@@ -33,8 +33,13 @@ export default function AdminProductList({ products, onRefresh }: AdminProductLi
 
   return (
     <div className="space-y-3">
+      {products.length === 0 && (
+        <div className="card-duo p-8 text-center text-gray-400 font-bold">
+          No products yet.
+        </div>
+      )}
       {products.map((product) => (
-        <div key={product.id} className="bg-white p-4 rounded-lg border border-gray-200">
+        <div key={product.id} className="card-duo p-4">
           {editingId === product.id ? (
             <AdminProductForm
               initialData={product}
@@ -46,32 +51,46 @@ export default function AdminProductList({ products, onRefresh }: AdminProductLi
               onCancel={() => setEditingId(null)}
             />
           ) : (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <div className="font-medium text-gray-900">{product.name}</div>
-                <div className="text-sm text-gray-500">
-                  🪙 {product.coin_price} | Stock: {product.stock} | {" "}
-                  <span className={product.is_active ? "text-green-600" : "text-red-600"}>
+                <div className="font-black text-duo-grayDark text-lg">
+                  {product.name}
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="pill-coin">
+                    <span>🪙</span>
+                    <span>{product.coin_price}</span>
+                  </span>
+                  <span className="badge-duo bg-duo-grayLight text-gray-600">
+                    Stock: {product.stock}
+                  </span>
+                  <span
+                    className={`badge-duo ${
+                      product.is_active
+                        ? "bg-duo-greenLight text-duo-greenDark"
+                        : "bg-duo-redLight text-duo-redDark"
+                    }`}
+                  >
                     {product.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => toggleActive(product)}
-                  className="text-sm px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="btn-duo-ghost btn-duo-sm"
                 >
                   {product.is_active ? "Deactivate" : "Activate"}
                 </button>
                 <button
                   onClick={() => setEditingId(product.id)}
-                  className="text-sm px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="btn-duo-blue btn-duo-sm"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(product.id)}
-                  className="text-sm px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
+                  className="btn-duo-red btn-duo-sm"
                 >
                   Delete
                 </button>

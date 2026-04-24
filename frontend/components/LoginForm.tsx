@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/services/api";
+import { useUser } from "@/lib/userContext";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -10,6 +11,7 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { refreshUser } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,6 +19,7 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await loginUser(email, password);
+      await refreshUser();
       router.push("/");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Login failed");
@@ -28,34 +31,36 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-50 text-red-700 px-4 py-2 rounded-md text-sm">{error}</div>
+        <div className="bg-duo-redLight text-duo-redDark px-4 py-3 rounded-2xl text-sm font-bold border-2 border-duo-red">
+          {error}
+        </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <label className="block text-xs font-black uppercase text-gray-500 mb-1 ml-1">
+          Email
+        </label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="input-duo"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <label className="block text-xs font-black uppercase text-gray-500 mb-1 ml-1">
+          Password
+        </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="input-duo"
         />
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-800 disabled:opacity-50"
-      >
-        {loading ? "Logging in..." : "Login"}
+      <button type="submit" disabled={loading} className="btn-duo w-full">
+        {loading ? "Logging in…" : "Log in"}
       </button>
     </form>
   );

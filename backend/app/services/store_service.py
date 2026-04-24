@@ -1,12 +1,15 @@
+from datetime import datetime, timezone
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.models.models import User, Product, Order, Transaction, TransactionType
+from app.models.models import User, Product, Order, Transaction, TransactionType, Treasury
+from app.services.coin_service import TREASURY_ID
 
 
 async def create_order(db: AsyncSession, user_id: int, product_id: int):
-    async with db.begin():
+    try:
         result = await db.execute(
             select(Product).where(Product.id == product_id).with_for_update()
         )
@@ -27,8 +30,19 @@ async def create_order(db: AsyncSession, user_id: int, product_id: int):
         if user.coin_balance < product.coin_price:
             raise ValueError("Insufficient coins")
 
+        treasury_result = await db.execute(
+            select(Treasury).where(Treasury.id == TREASURY_ID).with_for_update()
+        )
+        treasury = treasury_result.scalar_one_or_none()
+        if treasury is None:
+            treasury = Treasury(id=TREASURY_ID, balance=0)
+            db.add(treasury)
+            await db.flush()
+
         user.coin_balance -= product.coin_price
         product.stock -= 1
+        treasury.balance += product.coin_price
+        treasury.updated_at = datetime.now(timezone.utc)
 
         order = Order(user_id=user_id, product_id=product_id, status="COMPLETED")
         db.add(order)
@@ -41,10 +55,10 @@ async def create_order(db: AsyncSession, user_id: int, product_id: int):
         )
         db.add(transaction)
 
-        await db.flush()
-        await db.refresh(order)
-        await db.refresh(user)
-        await db.refresh(product)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
     result = await db.execute(
         select(Order)

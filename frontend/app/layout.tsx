@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { UserProvider } from "@/lib/userContext";
 
 export const metadata: Metadata = {
   title: "Merch Store",
@@ -14,9 +15,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-900 min-h-screen">
-        <Navbar />
-        <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen">
+        <UserProvider>
+          <Navbar />
+          <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
+        </UserProvider>
       </body>
     </html>
   );

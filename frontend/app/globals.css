@@ -1,3 +1,87 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    font-family: "Nunito", "DIN Round Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  body {
+    background: #fff;
+    color: #3c3c3c;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* Chunky Duolingo-style buttons: solid color + 4px "shadow" below = 3D effect */
+  .btn-duo {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold uppercase text-sm
+      bg-duo-green text-white border-b-4 border-duo-greenDark
+      hover:brightness-105 active:translate-y-0.5 active:border-b-2 active:mb-[2px]
+      disabled:opacity-50 disabled:cursor-not-allowed transition-[filter,transform] select-none;
+  }
+  .btn-duo-blue {
+    @apply btn-duo bg-duo-blue border-duo-blueDark;
+  }
+  .btn-duo-red {
+    @apply btn-duo bg-duo-red border-duo-redDark;
+  }
+  .btn-duo-yellow {
+    @apply btn-duo bg-duo-yellow text-duo-grayDark border-duo-yellowDark;
+  }
+  .btn-duo-purple {
+    @apply btn-duo bg-duo-purple border-duo-purpleDark;
+  }
+  .btn-duo-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold uppercase text-sm
+      bg-white text-duo-grayDark border-2 border-b-4 border-gray-200
+      hover:bg-gray-50 active:translate-y-0.5 active:border-b-2 active:mb-[2px]
+      disabled:opacity-50 disabled:cursor-not-allowed transition-[filter,transform] select-none;
+  }
+  .btn-duo-sm {
+    @apply px-3 py-1.5 text-xs rounded-xl;
+  }
+
+  .card-duo {
+    @apply bg-white rounded-2xl border-2 border-gray-200;
+  }
+  .card-duo-hover {
+    @apply card-duo hover:border-duo-blue transition-colors;
+  }
+
+  .input-duo {
+    @apply w-full px-4 py-3 rounded-2xl border-2 border-gray-200 bg-white text-duo-ink
+      focus:outline-none focus:border-duo-blue transition-colors placeholder:text-gray-400;
+  }
+
+  .badge-duo {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+  }
+
+  .tab-duo {
+    @apply px-4 py-3 text-sm font-bold uppercase tracking-wide border-b-4 border-transparent text-gray-500
+      hover:text-duo-grayDark transition-colors;
+  }
+  .tab-duo-active {
+    @apply text-duo-blue border-duo-blue;
+  }
+
+  .pill-coin {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full font-extrabold text-duo-yellowDark bg-duo-yellowLight border-2 border-duo-yellow;
+  }
+
+  .link-soft {
+    @apply text-duo-blue hover:text-duo-blueDark font-bold;
+  }
+}

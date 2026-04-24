@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
-import { getProducts, getMe } from "@/services/api";
+import { getProducts } from "@/services/api";
+import { useUser } from "@/lib/userContext";
 
 interface Product {
   id: number;
@@ -16,18 +16,13 @@ interface Product {
 
 export default function StorePage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const { user } = useUser();
 
-  const fetchData = async () => {
+  const fetchProducts = async () => {
     try {
-      const [productsData, userData] = await Promise.all([
-        getProducts(),
-        getMe().catch(() => null),
-      ]);
+      const productsData = await getProducts();
       setProducts(productsData);
-      setUser(userData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -36,24 +31,35 @@ export default function StorePage() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchProducts();
   }, []);
 
   const handlePurchase = () => {
-    fetchData();
+    fetchProducts();
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-gray-500">Loading...</div>;
+    return (
+      <div className="text-center py-16 text-gray-400 font-bold">Loading…</div>
+    );
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Store</h1>
+    <div className="space-y-6">
+      <div className="card-duo p-6 bg-gradient-to-br from-duo-greenLight to-white">
+        <h1 className="text-3xl font-black text-duo-grayDark">Store</h1>
+        <p className="text-gray-600 mt-1">
+          Spend your coins on corporate swag. Earn more by doing great work!
+        </p>
+      </div>
+
       {products.length === 0 ? (
-        <p className="text-gray-500">No products available.</p>
+        <div className="card-duo p-10 text-center">
+          <div className="text-5xl mb-3">🛒</div>
+          <p className="text-gray-500 font-bold">No products available.</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {products.map((product) => (
             <ProductCard
               key={product.id}

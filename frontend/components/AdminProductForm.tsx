@@ -70,100 +70,95 @@ export default function AdminProductForm({ initialData, onSubmit, onCancel }: Ad
     onSubmit(form);
   };
 
+  const field = (label: string, el: React.ReactNode) => (
+    <div>
+      <label className="block text-xs font-black uppercase text-gray-500 mb-1 ml-1">
+        {label}
+      </label>
+      {el}
+    </div>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded-lg border border-gray-200 space-y-3">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Name</label>
-        <input
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
-        <textarea
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="card-duo p-5 space-y-4">
+      {field(
+        "Name",
+        <input name="name" value={form.name} onChange={handleChange} required className="input-duo" />
+      )}
+      {field(
+        "Description",
+        <textarea name="description" value={form.description} onChange={handleChange} className="input-duo" />
+      )}
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Coin Price</label>
+        {field(
+          "Coin Price",
           <input
             name="coin_price"
             type="number"
             value={form.coin_price}
             onChange={handleNumberChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            className="input-duo"
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Stock</label>
+        )}
+        {field(
+          "Stock",
           <input
             name="stock"
             type="number"
             value={form.stock}
             onChange={handleNumberChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            className="input-duo"
           />
-        </div>
+        )}
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700">Image</label>
+        <label className="block text-xs font-black uppercase text-gray-500 mb-1 ml-1">Image</label>
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp,image/gif"
           onChange={handleFileChange}
           disabled={uploading}
-          className="w-full text-sm text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-gray-900 file:text-white file:text-sm file:hover:bg-gray-800"
+          className="w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-duo-blue file:text-white file:font-bold file:uppercase file:text-xs file:hover:brightness-105"
         />
-        {uploading && <p className="text-xs text-gray-500 mt-1">Uploading…</p>}
-        {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
+        {uploading && <p className="text-xs text-gray-500 mt-1 font-bold">Uploading…</p>}
+        {uploadError && (
+          <p className="text-xs text-duo-redDark mt-1 font-bold">{uploadError}</p>
+        )}
         <input
           name="image_url"
           value={form.image_url}
           onChange={handleChange}
           placeholder="or paste image URL"
-          className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+          className="input-duo mt-3"
         />
         {form.image_url && (
           <img
             src={form.image_url}
             alt="preview"
-            className="mt-2 h-24 w-24 object-cover rounded-md border border-gray-200"
+            className="mt-3 h-28 w-28 object-cover rounded-2xl border-2 border-gray-200"
           />
         )}
       </div>
-      <div className="flex items-center gap-2">
+
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           name="is_active"
           type="checkbox"
           checked={form.is_active}
           onChange={handleChange}
-          className="h-4 w-4"
+          className="h-5 w-5 accent-duo-green"
         />
-        <label className="text-sm text-gray-700">Active</label>
-      </div>
-      <div className="flex gap-2 pt-2">
-        <button
-          type="submit"
-          disabled={uploading}
-          className="px-4 py-2 bg-gray-900 text-white rounded-md text-sm hover:bg-gray-800 disabled:opacity-50"
-        >
+        <span className="text-sm font-bold text-duo-grayDark">Active</span>
+      </label>
+
+      <div className="flex gap-3 pt-1">
+        <button type="submit" disabled={uploading} className="btn-duo">
           Save
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
-        >
+        <button type="button" onClick={onCancel} className="btn-duo-ghost">
           Cancel
         </button>
       </div>

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 
 from app.db import get_db
-from app.models.models import User, Order
+from app.models.models import User, Order, Transaction
 from app.routes.auth import get_current_user
 
 router = APIRouter(prefix="/profile", tags=["profile"])
@@ -14,13 +14,22 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 async def get_profile(db: AsyncSession = Depends(get_db), current_user=Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    result = await db.execute(
+
+    user_result = await db.execute(
         select(User)
         .where(User.id == current_user.id)
         .options(selectinload(User.orders).selectinload(Order.product))
-        .options(selectinload(User.transactions))
     )
-    user = result.scalar_one()
+    user = user_result.scalar_one()
+
+    tx_result = await db.execute(
+        select(Transaction)
+        .where(Transaction.user_id == user.id)
+        .options(selectinload(Transaction.admin), selectinload(Transaction.template))
+        .order_by(desc(Transaction.created_at))
+    )
+    transactions = tx_result.scalars().all()
+
     return {
         "id": user.id,
         "name": user.name,
@@ -44,8 +53,10 @@ async def get_profile(db: AsyncSession = Depends(get_db), current_user=Depends(g
                 "amount": t.amount,
                 "type": t.type.value,
                 "reason": t.reason,
+                "admin_name": t.admin.name if t.admin else None,
+                "template_name": t.template.name if t.template else None,
                 "created_at": t.created_at.isoformat(),
             }
-            for t in user.transactions
+            for t in transactions
         ],
     }

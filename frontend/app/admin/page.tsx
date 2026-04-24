@@ -5,11 +5,21 @@ import { useRouter } from "next/navigation";
 import AdminProductList from "@/components/AdminProductList";
 import AdminOrderList from "@/components/AdminOrderList";
 import AdminProductForm from "@/components/AdminProductForm";
+import AdminUserList from "@/components/AdminUserList";
+import AdminUserForm from "@/components/AdminUserForm";
+import AdminTemplateList, { CoinTemplate } from "@/components/AdminTemplateList";
+import AdminTemplateForm, { TemplateFormData } from "@/components/AdminTemplateForm";
+import AdminTreasuryPanel from "@/components/AdminTreasuryPanel";
+import AdminCoinLog from "@/components/AdminCoinLog";
 import {
   getMe,
   getAdminProducts,
   getAdminOrders,
   createAdminProduct,
+  getAdminUsers,
+  createAdminUser,
+  getTemplates,
+  createTemplate,
 } from "@/services/api";
 
 interface Product {
@@ -28,101 +38,183 @@ interface Order {
   created_at: string;
 }
 
+interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  coin_balance: number;
+}
+
+type Tab = "products" | "orders" | "users" | "templates" | "treasury" | "coinlog";
+
 export default function AdminPage() {
   const [user, setUser] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [tab, setTab] = useState<"products" | "orders">("products");
-  const [showForm, setShowForm] = useState(false);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [templates, setTemplates] = useState<CoinTemplate[]>([]);
+  const [tab, setTab] = useState<Tab>("products");
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     getMe()
       .then((data) => {
-        if (data.role !== "ADMIN") {
+        if (data.role !== "ADMIN" && data.role !== "SUPERADMIN") {
           router.push("/");
           return;
         }
         setUser(data);
-        fetchAdminData();
+        fetchAll();
       })
       .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
   }, [router]);
 
-  const fetchAdminData = async () => {
+  const fetchAll = async () => {
     try {
-      const [p, o] = await Promise.all([getAdminProducts(), getAdminOrders()]);
+      const [p, o, u, t] = await Promise.all([
+        getAdminProducts(),
+        getAdminOrders(),
+        getAdminUsers(),
+        getTemplates(),
+      ]);
       setProducts(p);
       setOrders(o);
+      setUsers(u);
+      setTemplates(t);
     } catch (err) {
       console.error(err);
     }
   };
 
+  const refreshUsers = async () => setUsers(await getAdminUsers());
+  const refreshTemplates = async () => setTemplates(await getTemplates());
+
   const handleCreateProduct = async (data: any) => {
     await createAdminProduct(data);
-    setShowForm(false);
-    fetchAdminData();
+    setShowProductForm(false);
+    setProducts(await getAdminProducts());
+  };
+
+  const handleCreateUser = async (data: any) => {
+    await createAdminUser(data);
+    setShowUserForm(false);
+    refreshUsers();
+  };
+
+  const handleCreateTemplate = async (data: TemplateFormData) => {
+    await createTemplate(data);
+    setShowTemplateForm(false);
+    refreshTemplates();
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-gray-500">Loading...</div>;
+    return <div className="text-center py-16 text-gray-400 font-bold">Loading…</div>;
   }
+  if (!user) return null;
 
-  if (!user) {
-    return null;
-  }
+  const isSuper = user.role === "SUPERADMIN";
+  const allowedRoles: Array<"USER" | "ADMIN"> = isSuper ? ["USER", "ADMIN"] : ["USER"];
+
+  const tabs: Array<{ id: Tab; label: string; super?: boolean }> = [
+    { id: "products", label: "Products" },
+    { id: "orders", label: "Orders" },
+    { id: "users", label: "Users" },
+    { id: "templates", label: "Templates", super: true },
+    { id: "treasury", label: "Treasury", super: true },
+    { id: "coinlog", label: "Coin Log" },
+  ];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+      <div className="card-duo p-6 bg-gradient-to-br from-duo-purpleLight to-white">
+        <h1 className="text-3xl font-black text-duo-grayDark flex items-center gap-3 flex-wrap">
+          Admin Dashboard
+          {isSuper && (
+            <span className="badge-duo bg-duo-purple text-white">⚡ SUPERADMIN</span>
+          )}
+        </h1>
+        <p className="text-gray-600 mt-1">Manage products, users, coins & templates.</p>
+      </div>
 
-      <div className="flex gap-2 border-b border-gray-200">
-        <button
-          onClick={() => setTab("products")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 ${
-            tab === "products"
-              ? "border-gray-900 text-gray-900"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Products
-        </button>
-        <button
-          onClick={() => setTab("orders")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 ${
-            tab === "orders"
-              ? "border-gray-900 text-gray-900"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Orders
-        </button>
+      <div className="flex gap-1 border-b-2 border-gray-100 overflow-x-auto">
+        {tabs
+          .filter((t) => !t.super || isSuper)
+          .map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`tab-duo whitespace-nowrap ${
+                tab === t.id ? "tab-duo-active" : ""
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
       </div>
 
       {tab === "products" && (
         <div className="space-y-4">
-          {!showForm && (
-            <button
-              onClick={() => setShowForm(true)}
-              className="px-4 py-2 bg-gray-900 text-white rounded-md text-sm hover:bg-gray-800"
-            >
-              Add Product
+          {!showProductForm && (
+            <button onClick={() => setShowProductForm(true)} className="btn-duo">
+              + Add Product
             </button>
           )}
-          {showForm && (
+          {showProductForm && (
             <AdminProductForm
               onSubmit={handleCreateProduct}
-              onCancel={() => setShowForm(false)}
+              onCancel={() => setShowProductForm(false)}
             />
           )}
-          <AdminProductList products={products} onRefresh={fetchAdminData} />
+          <AdminProductList products={products} onRefresh={fetchAll} />
         </div>
       )}
 
       {tab === "orders" && <AdminOrderList orders={orders} />}
+
+      {tab === "users" && (
+        <div className="space-y-4">
+          {!showUserForm && (
+            <button onClick={() => setShowUserForm(true)} className="btn-duo">
+              + Add User
+            </button>
+          )}
+          {showUserForm && (
+            <AdminUserForm
+              onSubmit={handleCreateUser}
+              onCancel={() => setShowUserForm(false)}
+              allowedRoles={allowedRoles}
+            />
+          )}
+          <AdminUserList users={users} currentUserId={user.id} onRefresh={refreshUsers} />
+        </div>
+      )}
+
+      {tab === "templates" && isSuper && (
+        <div className="space-y-4">
+          {!showTemplateForm && (
+            <button onClick={() => setShowTemplateForm(true)} className="btn-duo">
+              + Add Template
+            </button>
+          )}
+          {showTemplateForm && (
+            <AdminTemplateForm
+              onSubmit={handleCreateTemplate}
+              onCancel={() => setShowTemplateForm(false)}
+            />
+          )}
+          <AdminTemplateList templates={templates} onRefresh={refreshTemplates} />
+        </div>
+      )}
+
+      {tab === "treasury" && isSuper && <AdminTreasuryPanel />}
+
+      {tab === "coinlog" && <AdminCoinLog />}
     </div>
   );
 }
