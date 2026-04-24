@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { uploadAdminImage } from "@/services/api";
 
 interface ProductFormData {
   name: string;
@@ -26,6 +27,8 @@ export default function AdminProductForm({ initialData, onSubmit, onCancel }: Ad
     image_url: "",
     is_active: true,
   });
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -44,6 +47,22 @@ export default function AdminProductForm({ initialData, onSubmit, onCancel }: Ad
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const url = await uploadAdminImage(file);
+      setForm((prev) => ({ ...prev, image_url: url }));
+    } catch (err: any) {
+      setUploadError(err?.response?.data?.detail || "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -97,13 +116,30 @@ export default function AdminProductForm({ initialData, onSubmit, onCancel }: Ad
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Image URL</label>
+        <label className="block text-sm font-medium text-gray-700">Image</label>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={handleFileChange}
+          disabled={uploading}
+          className="w-full text-sm text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-gray-900 file:text-white file:text-sm file:hover:bg-gray-800"
+        />
+        {uploading && <p className="text-xs text-gray-500 mt-1">Uploading…</p>}
+        {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
         <input
           name="image_url"
           value={form.image_url}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+          placeholder="or paste image URL"
+          className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
+        {form.image_url && (
+          <img
+            src={form.image_url}
+            alt="preview"
+            className="mt-2 h-24 w-24 object-cover rounded-md border border-gray-200"
+          />
+        )}
       </div>
       <div className="flex items-center gap-2">
         <input
@@ -118,7 +154,8 @@ export default function AdminProductForm({ initialData, onSubmit, onCancel }: Ad
       <div className="flex gap-2 pt-2">
         <button
           type="submit"
-          className="px-4 py-2 bg-gray-900 text-white rounded-md text-sm hover:bg-gray-800"
+          disabled={uploading}
+          className="px-4 py-2 bg-gray-900 text-white rounded-md text-sm hover:bg-gray-800 disabled:opacity-50"
         >
           Save
         </button>

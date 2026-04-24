@@ -63,3 +63,12 @@ export const getAdminOrders = async () => {
   const res = await api.get("/admin/orders");
   return res.data;
 };
+
+export const uploadAdminImage = async (file: File): Promise<string> => {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await api.post("/admin/upload", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data.url;
+};

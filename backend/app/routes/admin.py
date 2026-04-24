@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -7,6 +7,9 @@ from app.db import get_db
 from app.models.models import User, Product, Order
 from app.schemas.product import ProductCreate, ProductUpdate, ProductOut
 from app.routes.auth import get_current_user
+from app.services.storage import upload_image
+
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -71,6 +74,25 @@ async def admin_delete_product(
     await db.delete(db_product)
     await db.commit()
     return {"message": "Product deleted"}
+
+
+@router.post("/upload")
+async def admin_upload_image(
+    file: UploadFile = File(...),
+    admin: User = Depends(require_admin),
+):
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="File too large (max 5 MB)")
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty file")
+    try:
+        url = upload_image(data, file.filename or "", file.content_type or "")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+    return {"url": url}
 
 
 @router.get("/orders")
